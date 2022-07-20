@@ -5,6 +5,8 @@
 /// <https://docs.substrate.io/v3/runtime/frame>
 pub use pallet::*;
 
+use pallet_timestamp;
+use pallet_template::Limit;
 use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
 use frame_support::inherent::Vec;
@@ -20,6 +22,7 @@ pub mod pallet {
 		owner: T::AccountId,
 		price: u32,
 		gender: Gender,
+		created_at: <T as pallet_timestamp::Config>::Moment
 	}
 
 	#[derive(TypeInfo, Encode, Decode, Debug, Clone)]
@@ -36,9 +39,10 @@ pub mod pallet {
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + pallet_timestamp::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type KittiesLimit: Limit;
 	}
 
 	#[pallet::pallet]
@@ -77,6 +81,7 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		NotKittyOwner,
+		ExceedLimit
 	}
 
 	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
@@ -102,6 +107,7 @@ pub mod pallet {
 				price: price,
 				gender: gender,
 				owner: who.clone(),
+				created_at: <pallet_timestamp::Pallet<T>>::get()
 			};
 
 			let mut current_quantity = <Quantity<T>>::get();
@@ -111,6 +117,7 @@ pub mod pallet {
 			<KittyDNA<T>>::insert(dna.clone(), kitty.clone());
 
 			let mut owner_kitty_list = <OwnerKitties<T>>::get(who.clone()).unwrap_or_else(|| Vec::new());
+			ensure!(owner_kitty_list.len() < T::KittiesLimit::get() as usize, Error::<T>::ExceedLimit);
 			owner_kitty_list.push(dna.clone()); 
 			<OwnerKitties<T>>::insert(who.clone(), owner_kitty_list);
 			// Emit an event.
@@ -141,6 +148,7 @@ pub mod pallet {
 
 			// insert kitty to receiver mapping
 			let mut receiver_kitties_list = <OwnerKitties<T>>::get(receiver_id.clone()).unwrap_or_else(|| Vec::new());
+			ensure!(receiver_kitties_list.len() < T::KittiesLimit::get() as usize, Error::<T>::ExceedLimit);
 			receiver_kitties_list.push(dna.clone());
 			<OwnerKitties<T>>::insert(receiver_id.clone(), receiver_kitties_list);
 

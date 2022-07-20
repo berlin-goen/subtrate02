@@ -100,15 +100,3 @@ pub mod pallet {
 		}
 	}
 }
-
-
-pub trait Limit {
-	fn get() -> u8;
-}
-
-
-impl<T:Config> Limit for Pallet<T>{
-	fn get() -> u8 {
-		2
-	}
-}
