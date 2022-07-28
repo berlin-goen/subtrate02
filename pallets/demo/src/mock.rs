@@ -1,4 +1,4 @@
-use crate as pallet_template;
+use crate as pallet_demo;
 use frame_support::traits::{ConstU16, ConstU64};
 use frame_system as system;
 use sp_core::H256;
@@ -18,8 +18,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		Timestamp: pallet_timestamp::{Pallet, Call, Storage},
-		Kitties: pallet_kitties::{Pallet, Call, Storage, Event<T>},
+		DemoModule: pallet_demo::{Pallet, Call, Storage, Event<T>},
 	}
 );
 
@@ -50,9 +49,8 @@ impl system::Config for Test {
 	type MaxConsumers = frame_support::traits::ConstU32<16>;
 }
 
-impl pallet_kitties::Config for Test {
+impl pallet_demo::Config for Test {
 	type Event = Event;
-	type KittiesLimit = ConstU32<3>;
 }
 
 // Build genesis storage according to the mock runtime.

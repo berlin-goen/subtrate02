@@ -47,6 +47,7 @@ pub use sp_runtime::{Perbill, Permill};
 pub use pallet_template;
 pub use pallet_kitties;
 pub use pallet_tighly_coupling;
+pub use pallet_demo;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -277,6 +278,10 @@ impl pallet_tighly_coupling::Config for Runtime {
 	type Event = Event;
 }
 
+impl pallet_demo::Config for Runtime {
+	type Event = Event;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -296,6 +301,7 @@ construct_runtime!(
 		TemplateModule: pallet_template,
 		KittiesModule: pallet_kitties,
 		Tighly: pallet_tighly_coupling,
+		Demo: pallet_demo,
 	}
 );
 
@@ -341,6 +347,7 @@ mod benches {
 		[pallet_balances, Balances]
 		[pallet_timestamp, Timestamp]
 		[pallet_template, TemplateModule]
+		[pallet_kitties, KittiesModule]
 	);
 }
 

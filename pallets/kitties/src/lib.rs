@@ -3,13 +3,16 @@
 /// Edit this file to define custom logic or remove it if it is not needed.
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
 /// <https://docs.substrate.io/v3/runtime/frame>
+
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
 pub use pallet::*;
 
 use pallet_timestamp;
 use pallet_template::Limit;
-use frame_support::pallet_prelude::*;
+use frame_support::{dispatch::fmt, inherent::Vec, pallet_prelude::*};
 use frame_system::pallet_prelude::*;
-use frame_support::inherent::Vec;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -23,6 +26,16 @@ pub mod pallet {
 		price: u32,
 		gender: Gender,
 		created_at: <T as pallet_timestamp::Config>::Moment
+	}
+
+	impl<T: Config> fmt::Debug for Kitty<T> {
+		fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+			f.debug_struct("Kitty")
+			 .field("dna", &self.dna)
+			 .field("owner", &self.owner)
+			 .field("gender", &self.gender)
+			 .finish()
+		}
 	}
 
 	#[derive(TypeInfo, Encode, Decode, Debug, Clone)]
@@ -91,7 +104,7 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		/// An example dispatchable that takes a singles value as a parameter, writes the value to
 		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(33_200_000 + T::DbWeight::get().writes(1))]
 		pub fn create_kitty(origin: OriginFor<T>, dna: Vec<u8>, price: u32) -> DispatchResult {
 			// Check that the extrinsic was signed and get the signer.
 			// This function will return an error if the extrinsic is not signed.
@@ -105,12 +118,17 @@ pub mod pallet {
 			let kitty = Kitty {
 				dna: dna.clone(),
 				price: price,
-				gender: gender,
+				gender: gender.clone(),
 				owner: who.clone(),
 				created_at: <pallet_timestamp::Pallet<T>>::get()
 			};
 
 			let mut current_quantity = <Quantity<T>>::get();
+
+			log::info!("Current id: {}", current_quantity);
+			log::info!("Gender: {:?}", gender);
+			log::info!("Kitty: {:?}", &kitty);
+
 			current_quantity += 1;
 			Quantity::<T>::put(current_quantity);
 
@@ -126,7 +144,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(33_200_000 + T::DbWeight::get().writes(1))]
 		pub fn transfer_kitty(origin: OriginFor<T>, dna: Vec<u8>, receiver_id: T::AccountId) -> DispatchResult {
 			let sender = ensure_signed(origin)?;
 			// ensure the dna of kitty is belong to the sender
